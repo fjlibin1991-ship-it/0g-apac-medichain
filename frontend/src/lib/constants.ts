@@ -1,5 +1,5 @@
 // Provider configuration constants
-export const 0G_CHAIN_CONFIG = {
+export const OG_CHAIN_CONFIG = {
   chainId: 16600, // 0G testnet
   name: '0G Testnet',
   rpcUrl: 'https://evmrpc-testnet.0g.ai',

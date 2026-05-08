@@ -132,8 +132,8 @@ MediChain is a privacy-first AI health advisory platform for underserved regions
 ## Network Configuration
 
 ### 0G Storage
--KV Store: Patient health records (encrypted)
-- Log Store: Anonymous epidemiology data
+|- KV Store: Patient health records (encrypted)
+|- Log Store: Anonymous epidemiology data
 
 ### Smart Contract
 - Network: 0G testnet/mainnet (configurable)
