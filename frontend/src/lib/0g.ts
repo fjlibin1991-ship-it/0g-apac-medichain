@@ -5,6 +5,9 @@
  * Log layer: anonymous epidemiology statistics (TEE-verified)
  */
 
+'use client';
+
+import { useState, useCallback } from 'react';
 import { StorageClient } from "@0g/storage-sdk";
 
 const STORAGE_RPC = process.env.NEXT_PUBLIC_0G_STORAGE_RPC || "https://rpc-testnet.0g.ai";
@@ -114,4 +117,121 @@ export async function getAggregatedStats(regionCode?: number): Promise<{
     }
   }
   return stats;
+}
+
+// ---------------------------------------------------------------------------
+// React Hooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Hook for health record storage operations
+ */
+export function useHealthRecordStorage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const listRecords = useCallback(async (patientId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      return await listPatientRecords(patientId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to list records');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const getRecord = useCallback(async (recordId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      return await getHealthRecord(recordId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get record');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const storeRecord = useCallback(async (
+    recordId: string,
+    encryptedData: string,
+    encryptionIV: string
+  ) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const record: HealthRecord = {
+        id: recordId,
+        patientId: '',
+        encryptedData,
+        encryptionIV,
+        timestamp: Date.now(),
+        healthWorkerId: '',
+        recordType: 'general',
+      };
+      await storeHealthRecord(record);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to store record');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { listRecords, getRecord, storeRecord, isLoading, error };
+}
+
+/**
+ * Hook for epidemiology log operations
+ */
+export function useEpidemiologyLog() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const logData = useCallback(async (entry: AnonymousEpidemiologyEntry) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await appendEpidemiologyEntry(entry);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to log data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const queryData = useCallback(async (
+    regionCode?: number,
+    timeRange?: "daily" | "weekly" | "monthly",
+    limit = 100
+  ) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      return await queryEpidemiologyData(regionCode, timeRange, limit);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to query data');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const getStats = useCallback(async (regionCode?: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      return await getAggregatedStats(regionCode);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get stats');
+      return { totalCases: 0, bySymptom: {}, byAgeGroup: {}, lastUpdated: Date.now() };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { logData, queryData, getStats, isLoading, error };
 }

@@ -187,6 +187,77 @@ npx hardhat deploy --network 0gTestnet
 3. Anonymized epidemiology data
 4. Client-side encryption before storage
 
+## Privacy Model
+
+MediChain implements a **patient-controlled encryption model** where users hold their own keys:
+
+```
+Patient Device (Client-Side)
+    │
+    ├── User enters passphrase
+    │
+    ├── Passphrase → PBKDF2 (100k iterations) → AES-256-GCM key
+    │
+    ├── Symptom data encrypted locally BEFORE transmission
+    │
+    └── Only encrypted ciphertext stored on 0G Storage
+
+Server/Blockchain: NEVER sees plaintext health data
+```
+
+**Key Points:**
+- Patient's passphrase never leaves the device
+- Encryption happens in-browser using Web Crypto API
+- 0G Storage stores only encrypted blobs (ciphertext + IV)
+- No single point of failure - even if storage is compromised, data is unreadable
+
+## Demo Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ STEP 1: Patient Opens App                                           │
+│   → Landing page shows "Start Consultation" button                 │
+│   → No account creation required                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ STEP 2: Enter Passphrase                                            │
+│   → Patient enters a memorable passphrase                           │
+│   → Passphrase derives encryption key via PBKDF2                    │
+│   → New anonymous Patient ID generated or custom ID entered       │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ STEP 3: Complete Symptom Questionnaire                              │
+│   → Interactive multi-step questionnaire                           │
+│   → Select symptoms from 24 options (fever, cough, etc.)           │
+│   → Choose duration, severity, age group                           │
+│   → Optional notes field                                           │
+│   → Progress bar shows completion                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ STEP 4: AI Health Advice                                            │
+│   → "Get Health Advice" triggers analysis                           │
+│   → Pattern matching against 11 condition signatures                │
+│   → Urgency level assigned (low/medium/high/critical)              │
+│   → Red flags detected (chest pain, seizures, etc.)                │
+│   → Recommendations and follow-up timing provided                  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ STEP 5: Encrypted Storage                                           │
+│   → Advice encrypted client-side with patient's key                │
+│   → Encrypted record stored on 0G KV Store                        │
+│   → Only patient can decrypt with their passphrase                 │
+│   → Anonymous epidemiology data logged to 0G Log Store            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ## Architecture Highlights
 
 ### Data Flow
@@ -195,10 +266,18 @@ npx hardhat deploy --network 0gTestnet
 3. **Research**: Aggregated logs → Dashboard visualization
 
 ### 0G Integration
-- **KV Store**: Patient health records (encrypted)
-- **Log Store**: Anonymous epidemiology entries
-- **Compute**: AI inference (symptom analysis)
-- **Agent ID**: Health worker identity
+
+| Component | 0G Service | Usage |
+|-----------|-----------|-------|
+| **Health Records** | Storage KV | Encrypted patient records (ciphertext + IV) |
+| **Epidemiology** | Storage Log | Anonymous aggregated symptom data |
+| **AI Analysis** | Compute | Symptom pattern matching & condition detection |
+| **Health Workers** | Agent ID | Worker identity & credential verification |
+
+**Flow:**
+1. Consultation data → encrypted client-side → stored in 0G KV
+2. Aggregated epidemiology → logged to 0G Log
+3. AI advice generation → powered by 0G Compute
 
 ## Contributing
 

@@ -168,7 +168,6 @@ export function getSymptomsByCategory(category: string): Symptom[] {
  */
 export function analyzeSymptoms(response: QuestionnaireResponse): HealthAdvice {
   const matchedConditions: string[] = [];
-  const matchedSymptoms: string[] = [];
   let urgencyLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
   const redFlags: string[] = [];
 
@@ -441,7 +440,7 @@ export function useHealthAgent() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [responses]);
+  }, [responses, regionCode]);
 
   const getCurrentStep = useCallback(() => {
     return QUESTIONNAIRE_STEPS[currentStep];

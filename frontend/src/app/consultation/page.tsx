@@ -12,6 +12,7 @@ export default function ConsultationPage() {
   const [passphrase, setPassphrase] = useState('');
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [showAdvice, setShowAdvice] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const healthAgent = useHealthAgent();
   const { storeRecord } = useHealthRecordStorage();
@@ -39,6 +40,7 @@ export default function ConsultationPage() {
       healthAgent.startQuestionnaire();
     } catch (error) {
       console.error('Setup failed:', error);
+      setErrorMessage('Failed to set up patient. Please try again.');
     } finally {
       setIsSettingUp(false);
     }
@@ -49,6 +51,7 @@ export default function ConsultationPage() {
   };
 
   const handleAnalyze = async () => {
+    setErrorMessage(null);
     const result = await healthAgent.analyzeResponses(0);
     if (result) {
       // Log anonymous epidemiology data
@@ -68,7 +71,7 @@ export default function ConsultationPage() {
         timeRange: 'daily' as const
       };
       await logData(epidemiologyEntry);
-      
+
       // Encrypt and store advice if patient ID exists
       if (patientId) {
         const encrypted = await encryptData(JSON.stringify(result), passphrase);
@@ -80,8 +83,10 @@ export default function ConsultationPage() {
           );
         }
       }
-      
+
       setShowAdvice(true);
+    } else if (healthAgent.error) {
+      setErrorMessage(healthAgent.error);
     }
   };
 
@@ -112,6 +117,13 @@ export default function ConsultationPage() {
             to encrypt your data with AES-256-GCM.
           </p>
           
+          {/* Error display */}
+          {errorMessage && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{errorMessage}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -345,6 +357,11 @@ export default function ConsultationPage() {
             )}
 
             {/* Navigation buttons */}
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{errorMessage}</p>
+              </div>
+            )}
             <div className="flex justify-between mt-8">
               <Button
                 variant="outline"
