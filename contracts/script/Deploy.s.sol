@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../HealthWorkerRegistry.sol";
+import "../src/HealthWorkerRegistry.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -11,7 +11,8 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        HealthWorkerRegistry registry = new HealthWorkerRegistry(ownerAddress);
+        HealthWorkerRegistry registry = new HealthWorkerRegistry();
+        registry.initialize(ownerAddress);
 
         vm.stopBroadcast();
 

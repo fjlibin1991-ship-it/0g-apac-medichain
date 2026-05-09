@@ -37,7 +37,7 @@ forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 
 - **Contract**: HealthWorkerRegistry.sol
 - **Purpose**: Registry for community health workers with 0G Agent ID integration
-- **Constructor args**: `address initialOwner` ( Ownable constructor)
+- **Deployment**: Uses initialize() function (upgradeable pattern) after constructor deployment
 
 ## Verification
 

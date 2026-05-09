@@ -2,6 +2,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  turbopack: {
+    root: __dirname,
+  },
   transpilePackages: ['@0g/storage-sdk', '@0g/compute-sdk'],
   webpack: (config) => {
     // Handle 0G SDK imports
